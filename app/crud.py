@@ -13,26 +13,30 @@ async def read_trading_results_from_db(
     *,
     last: bool = False,
 ) -> list[TradingResults]:
-    request = select(TradingResults)
+    conditions = []
     if last:
         max_date = select(func.max(TradingResults.date)).scalar_subquery()
-        request = request.where(TradingResults.date == max_date)
+        conditions.append(TradingResults.date == max_date)
     if filters.oil_id:
-        request = request.where(TradingResults.oil_id == filters.oil_id)
+        conditions.append(TradingResults.oil_id == filters.oil_id)
     if filters.delivery_type_id:
-        request = request.where(
+        conditions.append(
             TradingResults.delivery_type_id == filters.delivery_type_id
         )
     if filters.delivery_basis_id:
-        request = request.where(
+        conditions.append(
             TradingResults.delivery_basis_id == filters.delivery_basis_id
         )
     if isinstance(filters, DynamicTradingResultsQuery):
-        request = request.where(
+        conditions.append(
             TradingResults.date.between(filters.start_date, filters.end_date)
         )
-    request = request.order_by(
-        desc(TradingResults.date), TradingResults.exchange_product_id
+    request = (
+        select(TradingResults)
+        .where(*conditions)
+        .order_by(
+            desc(TradingResults.date), TradingResults.exchange_product_id
+        )
     )
     result = await session.execute(request)
     return result.scalars().all()
