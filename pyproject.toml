@@ -1,0 +1,51 @@
+[project]
+name = "pytest-section"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi<0.100",
+    "uvicorn<0.21",
+    "sqlalchemy>=1.4",
+    "asyncpg>=0.29",
+    "aiosqlite>=0.18",
+    "redis>=4.6",
+    "apscheduler>=3.10",
+    "python-dotenv>=1.0",
+    "pendulum>=3.0",
+    "fastapi-cache2",
+    "pydantic<2",
+    "starlette<0.28",
+]
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pre-commit>=4.3.0",
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.1.0",
+    "pytest-cov>=6.2.1",
+    "ruff>=0.12.10",
+]
+
+[tool.ruff]
+line-length = 79
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+skip-magic-trailing-comma = false
+docstring-code-format = false
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = ["app/"]
+norecursedirs = ["env/*"]
+addopts = "-vv -p no:cacheprovider --disable-warnings"
+testpaths = ["tests/"]
+python_files = ["test_*.py"]
