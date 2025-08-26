@@ -23,10 +23,9 @@ async def test_get_trading_dates(db_session, days, expected_len):
     )
 
 
+# fmt: off
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    'filters, last, expected_count',
-    [
+@pytest.mark.parametrize('filters, last, expected_count', [
         (TradingResultsQuery(), False, 5),
         (TradingResultsQuery(), True, 2),
         (TradingResultsQuery(oil_id='A106'), False, 2),
@@ -37,22 +36,10 @@ async def test_get_trading_dates(db_session, days, expected_len):
         (TradingResultsQuery(delivery_type_id='L'), False, 1),
         (TradingResultsQuery(oil_id='D410'), True, 1),
         (TradingResultsQuery(delivery_basis_id='PDK'), True, 1),
-        (
-            DynamicTradingResultsQuery(
-                start_date=date(2025, 7, 17), end_date=date(2025, 7, 18)
-            ),
-            False,
-            4,
-        ),
-        (
-            DynamicTradingResultsQuery(
-                start_date=date(2025, 7, 17), end_date=date(2025, 7, 17)
-            ),
-            False,
-            2,
-        ),
-    ],
-)
+        (DynamicTradingResultsQuery(start_date=date(2025, 7, 17), end_date=date(2025, 7, 18)), False, 4),  # noqa: E501
+        (DynamicTradingResultsQuery(start_date=date(2025, 7, 17), end_date=date(2025, 7, 17)), False, 2),  # noqa: E501
+])
+# fmt: on
 async def test_read_trading_results_from_db(
     db_session, filters, last, expected_count
 ):
@@ -67,20 +54,19 @@ async def test_read_trading_results_from_db(
     assert rows == sorted(
         rows, key=lambda tr: (-tr.date.toordinal(), tr.exchange_product_id)
     ), 'Нарушен порядок сортировки'
-    if isinstance(filters, TradingResultsQuery):
-        if getattr(filters, 'oil_id', None) is not None:
-            assert all(tr.oil_id == filters.oil_id for tr in rows), (
-                'oil_id не совпадает'
-            )
-        if getattr(filters, 'delivery_basis_id', None) is not None:
-            assert all(
-                tr.delivery_basis_id == filters.delivery_basis_id
-                for tr in rows
-            ), 'delivery_basis_id не совпадает'
-        if getattr(filters, 'delivery_type_id', None) is not None:
-            assert all(
-                tr.delivery_type_id == filters.delivery_type_id for tr in rows
-            ), 'delivery_type_id не совпадает'
+    if getattr(filters, 'oil_id', None) is not None:
+        assert all(tr.oil_id == filters.oil_id for tr in rows), (
+            'oil_id не совпадает'
+        )
+    if getattr(filters, 'delivery_basis_id', None) is not None:
+        assert all(
+            tr.delivery_basis_id == filters.delivery_basis_id
+            for tr in rows
+        ), 'delivery_basis_id не совпадает'
+    if getattr(filters, 'delivery_type_id', None) is not None:
+        assert all(
+            tr.delivery_type_id == filters.delivery_type_id for tr in rows
+        ), 'delivery_type_id не совпадает'
     if isinstance(filters, DynamicTradingResultsQuery):
         assert all(
             filters.start_date <= tr.date <= filters.end_date for tr in rows

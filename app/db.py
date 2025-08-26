@@ -69,16 +69,3 @@ class TradingResults(Base):
         onupdate=dt.now,
         comment='Дата и время обновления записи',
     )
-
-    def __repr__(self):
-        return (
-            f'{type(self).__name__}'
-            f'{self.id=}, '
-            f'{self.exchange_product_id=}, '
-            f'{self.oil_id=}, '
-            f'{self.delivery_basis_id=}, '
-            f'{self.delivery_type_id=}, '
-            f'{self.volume=}, '
-            f'{self.count=}, '
-            f'{self.date=}'
-        )
