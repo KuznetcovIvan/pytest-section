@@ -1,42 +1,31 @@
-import pytest
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import AsyncSession
+from fakeredis.aioredis import FakeRedis
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.config import settings
-from app.db import Base, engine, get_async_session
-from app.main import app
+from app.db import Base
 
 pytest_plugins = ['fixtures.data']
 
+engine = create_async_engine(settings.database_url)
 
-@pytest.fixture(scope='session')
-def session_factory():
-    return sessionmaker(
-        bind=engine,
-        class_=AsyncSession,
-        autoflush=False,
-        autocommit=False,
-    )
-
-
-@pytest_asyncio.fixture(autouse=True)
-async def override_get_async_session(session_factory):
-    async def get_session():
-        async with session_factory() as session:
-            yield session
-
-    app.dependency_overrides[get_async_session] = get_session
-    yield
-    app.dependency_overrides.clear()
+TestingSessionLocal = sessionmaker(
+    class_=AsyncSession,
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+)
 
 
 @pytest_asyncio.fixture(scope='session', autouse=True)
-async def setup_db(trading_results, session_factory):
+async def setup_db(trading_results):
     assert settings.mode == 'test'
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
-    async with session_factory() as session:
+    async with TestingSessionLocal() as session:
         session.add_all(trading_results)
         await session.commit()
     yield
@@ -44,7 +33,17 @@ async def setup_db(trading_results, session_factory):
         await connection.run_sync(Base.metadata.drop_all)
 
 
+@pytest_asyncio.fixture(scope='session', autouse=True)
+async def init_cache():
+    redis = FakeRedis()
+    FastAPICache.init(RedisBackend(redis), prefix='test')
+    yield
+    await redis.flushall()
+    await redis.aclose()
+    FastAPICache.clear()
+
+
 @pytest_asyncio.fixture()
-async def db_session(session_factory):
-    async with session_factory() as session:
+async def db_session():
+    async with TestingSessionLocal() as session:
         yield session

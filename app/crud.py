@@ -17,13 +17,13 @@ async def read_trading_results_from_db(
     if last:
         max_date = select(func.max(TradingResults.date)).scalar_subquery()
         conditions.append(TradingResults.date == max_date)
-    if filters.oil_id:
+    if filters.oil_id is not None:
         conditions.append(TradingResults.oil_id == filters.oil_id)
-    if filters.delivery_type_id:
+    if filters.delivery_type_id is not None:
         conditions.append(
             TradingResults.delivery_type_id == filters.delivery_type_id
         )
-    if filters.delivery_basis_id:
+    if filters.delivery_basis_id is not None:
         conditions.append(
             TradingResults.delivery_basis_id == filters.delivery_basis_id
         )
