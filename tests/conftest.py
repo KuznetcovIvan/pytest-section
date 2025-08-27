@@ -40,7 +40,6 @@ async def init_cache():
     yield
     await redis.flushall()
     await redis.aclose()
-    FastAPICache.clear()
 
 
 @pytest_asyncio.fixture()

@@ -35,7 +35,7 @@ class TestGetLastTradingDates:
             if response.status_code == HTTPStatus.OK:
                 try:
                     dates = parse_raw_as(list[date], response.text)
-                except ValidationError as error:
+                except ValidationError as error:  # pragma: no cover
                     pytest.fail(
                         f'JSON не соответствует формату [list[date]]: {error}'
                     )
@@ -74,7 +74,7 @@ class TestGetDynamics:
                     trading_results = parse_raw_as(
                         list[TradingResultsDB], response.text
                     )
-                except ValidationError as error:
+                except ValidationError as error:  # pragma: no cover
                     pytest.fail(
                         f'JSON не соответствует формату '
                         f'[list[TradingResultsDB]]: {error}'
@@ -134,7 +134,7 @@ class TestGetTradingResults:
                     trading_results = parse_raw_as(
                         list[TradingResultsDB], response.text
                     )
-                except ValidationError as error:
+                except ValidationError as error:  # pragma: no cover
                     pytest.fail(
                         f'JSON не соответствует формату '
                         f'[list[TradingResultsDB]]: {error}'

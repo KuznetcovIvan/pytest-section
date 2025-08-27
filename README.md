@@ -9,7 +9,8 @@
     - со списком торгов за заданный период (с фильтрацией по oil_id, delivery_type_id, delivery_basis_id, start_date, end_date);
     - со списком последних торгов (с фильтрацией по oil_id, delivery_type_id, delivery_basis_id);
 - кеширование запросов (Redis);
-- ежедневный сброс кэша в `14:11`.
+- ежедневный сброс кэша в `14:11`;
+- тестирование CRUD и API.
 ---
 
 ### Установка и запуск:
@@ -21,8 +22,8 @@
 4. Установить зависимости проекта
 - `uv sync`
 - `uv sync --group dev` (с dev-инструментами)
-5. Создать файл с переменными окружения (.env)
-- образец в [`.env.example`](.env.example).
+5. Создать файл(ы) с переменными окружения `.env` (+`.test.env` для запуска тестов)
+- образец в [`.env.example`](.env.example) ([`.test.env.example`](.test.env.example)).
 6. Запустить сервис в режиме разработки
 - `uv run uvicorn app.main:app --reload`
 
@@ -52,6 +53,7 @@
 - SQLAlchemy + asyncpg  
 - fastapi-cache2  
 - APScheduler
+- pytest-asyncio
 
 ---
 
@@ -61,3 +63,5 @@
 ![example](image/example_2.PNG)
 ![example](image/example_3.PNG)
 ![example](image/example_4.PNG)
+![example](image/example_test.PNG)
+#### [Отчёт по покрытию](coverage.txt)
