@@ -8,9 +8,9 @@ class Settings(BaseSettings):
     max_days_limit: int = 365
     expire_cache: int = 60 * 60 * 24
     clear_cache_time: dict = {'hour': 14, 'minute': 11}
+    mode: str
     database_url: str
     redis_cache_url: str
-    mode: str
 
     class Config:
         env_file = '.env'

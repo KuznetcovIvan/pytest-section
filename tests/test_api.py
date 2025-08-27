@@ -39,23 +39,6 @@ class TestGetLastTradingDates:
                 'Даты не отсортированы по убыванию'
             )
 
-    # async def test_cache_get_last_trading_dates(self, client, mocker):
-    #     spy = mocker.spy(api_module, 'get_trading_dates')
-    #     response = await client.get(
-    #         '/api/trading-dates', params={'days': 1}, 
-    #     )
-    #     assert response.status_code == HTTPStatus.OK, (
-    #         f'Статус {response.status_code} вместо 200'
-    #     )
-    #     assert spy.call_count == 1, 'первый вызов обязан сходить в БД'
-    #     response = await client.get(
-    #         '/api/trading-dates', params={'days': 1}, 
-    #     )
-    #     assert response.status_code == HTTPStatus.OK, (
-    #         f'Статус {response.status_code} вместо 200'
-    #     )
-    #     assert spy.call_count == 1, 'второй вызов должен прийти из кеша'
-
 
 class TestGetDynamics:
     # fmt: off

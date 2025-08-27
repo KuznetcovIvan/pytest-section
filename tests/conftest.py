@@ -1,7 +1,5 @@
 import pytest_asyncio
-from fakeredis.aioredis import FakeRedis
-from fastapi_cache import FastAPICache
-from fastapi_cache.backends.redis import RedisBackend
+from asgi_lifespan import LifespanManager
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -39,24 +37,17 @@ async def load_trading_results(setup_db, trading_results):
         await session.commit()
 
 
-@pytest_asyncio.fixture(scope='session', autouse=True)
-async def init_cache():
-    redis = FakeRedis()
-    FastAPICache.init(RedisBackend(redis), prefix='test')
-    yield
-    await redis.flushall()
-    await redis.aclose()
+@pytest_asyncio.fixture(scope='session')
+async def client(setup_db):
+    async with LifespanManager(app):
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url='http://test',
+        ) as client:
+            yield client
 
 
 @pytest_asyncio.fixture()
 async def db_session():
     async with TestingSessionLocal() as session:
         yield session
-
-
-@pytest_asyncio.fixture(scope='session')
-async def client():
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url='http://test'
-    ) as client:
-        yield client

@@ -34,4 +34,4 @@ async def startup():
 @app.on_event('shutdown')
 async def shutdown():
     scheduler.shutdown(wait=False)
-    await redis_client.close()
+    await redis_client.aclose()
