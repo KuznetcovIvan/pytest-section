@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     clear_cache_time: dict = {'hour': 14, 'minute': 11}
     database_url: str
     redis_cache_url: str
+    mode: str
 
     class Config:
         env_file = '.env'
