@@ -2,17 +2,14 @@ from datetime import date
 from http import HTTPStatus
 
 import pytest
-from httpx import ASGITransport, AsyncClient
 from pydantic import ValidationError, parse_raw_as
 
 from app.config import settings
-from app.main import app
 from app.schemas import TradingResultsDB
 
 
 class TestGetLastTradingDates:
     # fmt: off
-    @pytest.mark.asyncio
     @pytest.mark.parametrize('params, expected_status', [
             ({'days': 1}, HTTPStatus.OK),
             ({'days': '1'}, HTTPStatus.OK),
@@ -24,29 +21,44 @@ class TestGetLastTradingDates:
             (None, HTTPStatus.UNPROCESSABLE_ENTITY),
     ])
     # fmt: on
-    async def test_get_last_trading_dates(self, params, expected_status):
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url='http://test'
-        ) as client:
-            response = await client.get('/api/trading-dates', params=params)
-            assert response.status_code == expected_status, (
-                f'Статус {response.status_code} вместо {expected_status}'
-            )
-            if response.status_code == HTTPStatus.OK:
-                try:
-                    dates = parse_raw_as(list[date], response.text)
-                except ValidationError as error:  # pragma: no cover
-                    pytest.fail(
-                        f'JSON не соответствует формату [list[date]]: {error}'
-                    )
-                assert dates == sorted(dates, reverse=True), (
-                    'Даты не отсортированы по убыванию'
+    async def test_get_last_trading_dates(
+        self, client, params, expected_status
+    ):
+        response = await client.get('/api/trading-dates', params=params)
+        assert response.status_code == expected_status, (
+            f'Статус {response.status_code} вместо {expected_status}'
+        )
+        if response.status_code == HTTPStatus.OK:
+            try:
+                dates = parse_raw_as(list[date], response.text)
+            except ValidationError as error:  # pragma: no cover
+                pytest.fail(
+                    f'JSON не соответствует формату [list[date]]: {error}'
                 )
+            assert dates == sorted(dates, reverse=True), (
+                'Даты не отсортированы по убыванию'
+            )
+
+    # async def test_cache_get_last_trading_dates(self, client, mocker):
+    #     spy = mocker.spy(api_module, 'get_trading_dates')
+    #     response = await client.get(
+    #         '/api/trading-dates', params={'days': 1}, 
+    #     )
+    #     assert response.status_code == HTTPStatus.OK, (
+    #         f'Статус {response.status_code} вместо 200'
+    #     )
+    #     assert spy.call_count == 1, 'первый вызов обязан сходить в БД'
+    #     response = await client.get(
+    #         '/api/trading-dates', params={'days': 1}, 
+    #     )
+    #     assert response.status_code == HTTPStatus.OK, (
+    #         f'Статус {response.status_code} вместо 200'
+    #     )
+    #     assert spy.call_count == 1, 'второй вызов должен прийти из кеша'
 
 
 class TestGetDynamics:
     # fmt: off
-    @pytest.mark.asyncio
     @pytest.mark.parametrize('params, expected_status, expected_count', [
             ({'start_date': '2025-07-17', 'end_date': '2025-07-18'}, HTTPStatus.OK, 4),                             # noqa: E501
             ({'start_date': '2025-07-17', 'end_date': '2025-07-17'}, HTTPStatus.OK, 2),                             # noqa: E501
@@ -61,52 +73,46 @@ class TestGetDynamics:
             (None, HTTPStatus.UNPROCESSABLE_ENTITY, None),
     ])
     # fmt: on
-    async def test_get_dynamics(self, params, expected_status, expected_count):
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url='http://test'
-        ) as client:
-            response = await client.get('/api/results-by-date', params=params)
-            assert response.status_code == expected_status, (
-                f'Статус {response.status_code} вместо {expected_status}'
-            )
-            if response.status_code == HTTPStatus.OK:
-                try:
-                    trading_results = parse_raw_as(
-                        list[TradingResultsDB], response.text
-                    )
-                except ValidationError as error:  # pragma: no cover
-                    pytest.fail(
-                        f'JSON не соответствует формату '
-                        f'[list[TradingResultsDB]]: {error}'
-                    )   
-                assert len(trading_results) == expected_count, (
-                    f'Ожидали {expected_count} записей, '
-                    f'получили {len(trading_results)}'
+    async def test_get_dynamics(
+        self, client, params, expected_status, expected_count
+    ):
+        response = await client.get('/api/results-by-date', params=params)
+        assert response.status_code == expected_status, (
+            f'Статус {response.status_code} вместо {expected_status}'
+        )
+        if response.status_code == HTTPStatus.OK:
+            try:
+                trading_results = parse_raw_as(
+                    list[TradingResultsDB], response.text
                 )
-                assert trading_results == sorted(
-                    trading_results, key=lambda tr: (
-                        -tr.date.toordinal(), tr.exchange_product_id
-                    )
-                ),'Нарушен порядок сортировки'
+            except ValidationError as error:  # pragma: no cover
+                pytest.fail(
+                    f'JSON не соответствует формату '
+                    f'[list[TradingResultsDB]]: {error}'
+                )   
+            assert len(trading_results) == expected_count, (
+                f'Ожидали {expected_count} записей, '
+                f'получили {len(trading_results)}'
+            )
+            assert trading_results == sorted(
+                trading_results, key=lambda tr: (
+                    -tr.date.toordinal(), tr.exchange_product_id
+                )
+            ),'Нарушен порядок сортировки'
                 
-    @pytest.mark.asyncio
-    async def test_get_dynamics_when_range_exceeds_limit(self, monkeypatch):
-        monkeypatch.setattr('app.config.settings.max_days_range', 0)
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url='http://test'
-        ) as client:
-            response = await client.get('/api/results-by-date', params={
-                    'start_date': '2025-07-17',
-                    'end_date': '2025-07-18',
-            })
+    async def test_get_dynamics_when_range_exceeds_limit(self, client, mocker):
+        mocker.patch('app.config.settings.max_days_range', 0)
+        response = await client.get('/api/results-by-date', params={
+                'start_date': '2025-07-17',
+                'end_date': '2025-07-18',
+        })
         assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, (
-            f'При превышении лимита max_days_range '
-            f'ожидался статус 422 вместо {response.status_code}')
+        f'При превышении лимита max_days_range '
+        f'ожидался статус 422 вместо {response.status_code}')
 
 
 class TestGetTradingResults:
     # fmt: off
-    @pytest.mark.asyncio
     @pytest.mark.parametrize('params, expected_status, expected_count', [
             (None, HTTPStatus.OK, 2),
             ({'extra': 2}, HTTPStatus.OK, 2),
@@ -120,31 +126,28 @@ class TestGetTradingResults:
     ])
     # fmt: on
     async def test_get_trading_results(
-        self, params, expected_status, expected_count
+        self, client, params, expected_status, expected_count
     ):
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url='http://test'
-        ) as client:
-            response = await client.get('/api/last-results', params=params)
-            assert response.status_code == expected_status, (
-                f'Статус {response.status_code} вместо {expected_status}'
-            )
-            if response.status_code == HTTPStatus.OK:
-                try:
-                    trading_results = parse_raw_as(
-                        list[TradingResultsDB], response.text
-                    )
-                except ValidationError as error:  # pragma: no cover
-                    pytest.fail(
-                        f'JSON не соответствует формату '
-                        f'[list[TradingResultsDB]]: {error}'
-                    )
-                assert len(trading_results) == expected_count, (
-                    f'Ожидали {expected_count} записей, '
-                    f'получили {len(trading_results)}'
+        response = await client.get('/api/last-results', params=params)
+        assert response.status_code == expected_status, (
+            f'Статус {response.status_code} вместо {expected_status}'
+        )
+        if response.status_code == HTTPStatus.OK:
+            try:
+                trading_results = parse_raw_as(
+                    list[TradingResultsDB], response.text
                 )
-                assert trading_results == sorted(
-                    trading_results, key=lambda tr: (
-                        -tr.date.toordinal(), tr.exchange_product_id
-                    )
-                ), 'Нарушен порядок сортировки'
+            except ValidationError as error:  # pragma: no cover
+                pytest.fail(
+                    f'JSON не соответствует формату '
+                    f'[list[TradingResultsDB]]: {error}'
+                )
+            assert len(trading_results) == expected_count, (
+                f'Ожидали {expected_count} записей, '
+                f'получили {len(trading_results)}'
+            )
+            assert trading_results == sorted(
+                trading_results, key=lambda tr: (
+                    -tr.date.toordinal(), tr.exchange_product_id
+                )
+            ), 'Нарушен порядок сортировки'

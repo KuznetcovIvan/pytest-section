@@ -7,7 +7,6 @@ from app.db import TradingResults
 from app.schemas import DynamicTradingResultsQuery, TradingResultsQuery
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize('days, expected_len', [(0, 0), (1, 1), (10, 3)])
 async def test_get_trading_dates(db_session, days, expected_len):
     result = await get_trading_dates(db_session, days)
@@ -24,7 +23,6 @@ async def test_get_trading_dates(db_session, days, expected_len):
 
 
 # fmt: off
-@pytest.mark.asyncio
 @pytest.mark.parametrize('filters, last, expected_count', [
         (TradingResultsQuery(), False, 5),
         (TradingResultsQuery(), True, 2),
