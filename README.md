@@ -10,7 +10,7 @@
     - со списком последних торгов (с фильтрацией по oil_id, delivery_type_id, delivery_basis_id);
 - кеширование запросов (Redis);
 - ежедневный сброс кэша в `14:11`;
-- тестирование CRUD и API.
+- Integration/Unit тесты.
 ---
 
 ### Установка и запуск:
@@ -26,6 +26,8 @@
 - образец в [`.env.example`](.env.example) ([`.test.env.example`](.test.env.example)).
 6. Запустить сервис в режиме разработки
 - `uv run uvicorn app.main:app --reload`
+7. Запустить тесты (должны быть установлены `dev` зависимости)
+- `uv run pytest`
 
 ---
 
@@ -53,7 +55,7 @@
 - SQLAlchemy + asyncpg  
 - fastapi-cache2  
 - APScheduler
-- pytest-asyncio
+- pytest
 
 ---
 

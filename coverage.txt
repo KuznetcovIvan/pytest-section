@@ -1,17 +1,19 @@
-Name                     Stmts   Miss  Cover   Missing
-------------------------------------------------------
-app\__init__.py              0      0   100%
-app\api.py                  28      0   100%
-app\config.py               14      0   100%
-app\crud.py                 25      0   100%
-app\db.py                   28      0   100%
-app\main.py                 22      0   100%
-app\schemas.py              22      0   100%
-app\tasks.py                 3      1    67%   5
-app\validators.py           14      0   100%
-tests\conftest.py           33      0   100%
-tests\fixtures\data.py       6      0   100%
-tests\test_api.py           40      0   100%
-tests\test_crud.py          30      0   100%
-------------------------------------------------------
-TOTAL                      265      1    99%
+Name                       Stmts   Miss  Cover
+----------------------------------------------
+app\__init__.py                0      0   100%
+app\api.py                    28      0   100%
+app\config.py                 14      0   100%
+app\crud.py                   25      0   100%
+app\db.py                     28      0   100%
+app\main.py                   22      0   100%
+app\schemas.py                22      0   100%
+app\tasks.py                   3      1    67%
+app\validators.py             14      0   100%
+tests\conftest.py             33      0   100%
+tests\fixtures\data.py         6      0   100%
+tests\test_api.py             39      0   100%
+tests\test_crud.py            30      0   100%
+tests\test_schemas.py         13      0   100%
+tests\test_validators.py      11      0   100%
+----------------------------------------------
+TOTAL                        288      1    99%
